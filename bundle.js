@@ -45,11 +45,11 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	var canvas = document.getElementById('canvas');
-	canvas.width = "1000";
-	canvas.height = "700";
+	canvas.width = window.innerWidth*0.95;
+	canvas.height = window.innerHeight*0.95;
 	var c = canvas.getContext('2d');
-	c.width = 1000;
-	c.height = 700;
+	c.width = window.innerWidth*0.95;
+	c.height = window.innerHeight*0.95;
 	var Game = __webpack_require__(1);
 
 
@@ -70,7 +70,7 @@
 	var msg= "0:0";
 	var targetPos = {x:0, y:0};
 	var Player = __webpack_require__(5);
-
+	var Util = __webpack_require__(4);
 
 	function getMousePos(ctx,e){
 	  var canvasBox = this.canvas.getBoundingClientRect();
@@ -80,11 +80,15 @@
 
 
 	var Game = function(ctx,canvas){
+	  this.backgroundImage = "http://res.cloudinary.com/bravaudio/image/upload/v1463032054/Silver-Blur-Background_fk8fyd.jpg";
 	  this.ctx = ctx;
 	  this.canvas = canvas;
 	  this.germs = [];
-	  this.makeGerms(30);
-	  this.player =  this.makePlayer();
+	  this.makeGerms(200);
+	  this.player =  "";//this.makePlayer();
+	  this.start = true;
+	  this.over = false;
+	  this.debugger = false;
 	  this.canvas.addEventListener('mousemove',
 	  function(e){this.handleMouseMove(ctx,e);}.bind(this), false);
 
@@ -100,26 +104,58 @@
 
 
 	 if(key == 38 || key == 87){//up
-	   if(Math.abs(this.player.vel.y)<2){
+	   if(this.player.vel.y>-2.5){
 	     this.player.vel.y-=0.3;
+	     this.handleEject(this);
 	   }
-	 }else if(key == 39 || key == 69){//right
-	   if(Math.abs(this.player.vel.x)<2){
+	 }else if(key == 39 || key == 68){//right
+	   if(this.player.vel.x<2.5){
 	     this.player.vel.x+=0.3;
+	      this.handleEject(this);
 	   }
 	 }else if(key == 40 || key == 83){//down
-	   if(Math.abs(this.player.vel.y)<2){
+	   if(this.player.vel.y<2.5){
 	    this.player.vel.y+=0.3;
+	     this.handleEject(this);
 	   }
-	 }else if(key == 64 || key == 37){//left
-	   if(Math.abs(this.player.vel.x)<2){
+	 }else if(key == 65 || key == 37){//left
+	   if(this.player.vel.x>-2.5){
 	     this.player.vel.x-=0.3;
+	      this.handleEject(this);
 	   }
+	 }else if(key == 32 && this.over ){
+	   this.germs = [];
+	   this.makeGerms(300);
+	   this.player =  this.makePlayer();
+	   this.over = false;
+	 }else if(key == 67){
+	   this.debugger = !this.debugger;
+	 }else if(key == 32 && (this.over || this.start)){
+	   this.germs = [];
+	   this.makeGerms(300);
+	   this.player =  this.makePlayer();
+	   this.start = false;
 	 }
 
 
 
 	};
+
+
+	Game.prototype.handleEject = function(game){
+
+	  game.player.radius=Math.sqrt(Math.pow(game.player.radius,2)*0.95);
+
+	   var vec = {x: -game.player.vel.x/(Util.magnitude(game.player.vel.x,game.player.vel.y)), y: -game.player.vel.y/(Util.magnitude(game.player.vel.x,game.player.vel.y)) }
+	   var pos = {x: (vec.x*game.player.radius*1.3)+ game.player.pos.x, y: (vec.y*game.player.radius*1.3)+ game.player.pos.y};
+
+	   var vel = {x: -game.player.vel.x, y:-game.player.vel.y};
+	   var radius =  Math.sqrt(Math.pow(game.player.radius,2)*0.05);
+	   var density = 1;
+
+	   var newGerm = new Germ({id:game.germs.length+1, radius: radius, density: density, pos: pos, vel: vel, color:"#66cdaa"});
+	   game.germs.push(newGerm);
+	},
 
 	Game.prototype.handleMouseMove = function(ctx, e){
 	  var mousePos = getMousePos(ctx,e);
@@ -133,7 +169,7 @@
 	  var vel = {x: 0 , y: 0};
 	  var radius =  12;
 	  var density = 1;
-	  var options = {id:9000, radius: radius, density: density, pos: pos, vel: vel};
+	  var options = {id:9000, radius: radius, density: density, pos: pos, vel: vel, color:"#4682b4"};
 	  return new Player(options);
 
 	};
@@ -142,9 +178,9 @@
 	  for(var i = 0; i<num;i++){
 	    var pos = {x:Math.random()*this.ctx.width, y:Math.random()*this.ctx.height};
 	    var vel = {x:(Math.random()-0.5)*1, y:(Math.random()-0.5)*1};
-	    var radius =  10;
+	    var radius =  Math.random()*15;
 	    var density = 1;
-	    var options = {id:i+1, radius: radius, density: density, pos: pos, vel: vel};
+	    var options = {id:i+1, radius: radius, density: density, pos: pos, vel: vel, color:"#66cdaa"};
 	    var newGerm = new Germ(options);
 	    this.germs.push(newGerm);
 	  }
@@ -160,37 +196,111 @@
 	};
 
 
+	Game.prototype.checkGameOver = function(){
+	  if(this.player.radius <= 1 ){
+	    this.over = "lost";
+	  }
+	  if(this.germs.length===0){
+	    this.over = "won";
+	  }
+	};
 
+	Game.prototype.checkStart = function(ctx){
+	  if(this.start){
+	    this.renderStart(ctx);
+	  }
+	};
+
+	Game.prototype.renderStart = function(ctx){
+
+	  ctx.save();
+	  ctx.globalAlpha = 0.2;
+	  ctx.fillRect(0,0,ctx.width,ctx.height);
+	  ctx.restore();
+
+
+
+	  ctx.save();
+
+
+	    ctx.fillStyle="#FFFFFF";
+	    ctx.font = "60px Arial";
+	    ctx.fillText("press space to play!",ctx.width/2-250,ctx.height/2-10);
+
+	  ctx.restore();
+
+
+	};
+
+	Game.prototype.renderOver = function(ctx){
+	  ctx.save();
+	  ctx.globalAlpha = 0.5;
+	  ctx.fillRect(0,0,ctx.width,ctx.height);
+	  ctx.restore();
+
+	  ctx.save();
+
+
+	  if(this.over === "lost"){
+
+	    ctx.fillStyle="#FFFFFF";
+	    ctx.font = "30px Arial";
+	    ctx.fillText("Game Over :\(",ctx.width/2-80,ctx.height/2-30);
+	    ctx.fillText("press space to play again",ctx.width/2-150,ctx.height/2);
+
+	  }else if (this.over === "won"){
+	    ctx.fillStyle="#FFFFFF";
+	    ctx.font = "30px Arial";
+	    ctx.fillText("You Won!",ctx.width/2-30,ctx.height/2-10);
+	    ctx.fillText("press space to play again",ctx.width/2-150,ctx.height/2-30);
+	  }
+	  ctx.restore();
+	},
 
 	Game.prototype.render = function(ctx){
-	  console.log(this.germs.length)
-	  this.player.render(ctx,this.germs);
+	  if(!this.start){
 
+	      this.player.render(ctx,this.germs);
+	  }
 
 
 	for(var i =0;i < this.germs.length; i++){
-	    console.log(this.germs[i].radius)
 	    this.germs[i].render(ctx,this.germs);
 
 	    if(this.germs[i].radius<=1){
 	     this.germs.splice(i,1);
 	     i-=1;
 	    }
-
-
 	  }
 
-
+	  this.checkGameOver();
 
 	};
 
 	Game.prototype.draw = function(ctx){
-	  this.player.draw(ctx);
+	  this.drawBackground(ctx);
+	  if(this.start){
+	    this.checkStart(ctx);
+	  }else{
+	    this.player.draw(ctx);
+	  }
+
+	  if(this.debugger){
 	  this.cursorPos(ctx);
+	  }
 	  this.germs.forEach(function(germ){germ.draw(ctx);});
 
+	  if(this.over){
+	    this.renderOver(ctx);
+	  }
 	};
 
+
+	Game.prototype.drawBackground = function(ctx){
+	  base_image = new Image();
+	  base_image.src = this.backgroundImage;
+	  ctx.drawImage(base_image, 0, 0, ctx.width, ctx.height);
+	};
 
 
 
@@ -237,6 +347,7 @@
 	  this.pos = options.pos;
 	  this.vel = options.vel;
 	  this.radius = options.radius;
+	  this.color = options.color;
 	  this.mass = Math.PI*(options.radius*options.radius)*options.density;
 
 	};
@@ -263,7 +374,7 @@
 	Ball.prototype.draw = function(ctx){
 	  ctx.save();
 	  ctx.beginPath();
-
+	  ctx.fillStyle = this.color;
 	  ctx.arc(this.pos.x,this.pos.y,this.radius,0,2*Math.PI);
 	  ctx.fill();
 
@@ -281,7 +392,7 @@
 	var Util = {
 	  checkBounds: function(obj,ctx){
 
-	    var inelasticCoeff = 1;
+	    var inelasticCoeff = 0.5;
 
 	    if(Math.abs(obj.vel.y)<0.1){
 	      obj.vel.y=0;
@@ -346,22 +457,26 @@
 
 	  enforceCollison: function(ball1,ball2){
 
-	    if(ball1.radius > 1 && ball2.radius >1){
-	      var massExchange = 20;
 
+	    var massExchange = 16;
+	    if(ball1.radius >0 && ball2.radius > 0){
 	      if(ball1.radius > ball2.radius){
-
-
-
-
-
+	        if(ball2.radius>4.001){
 	        ball2.radius=Math.sqrt(Math.pow(ball2.radius,2)-massExchange);
 	        ball1.radius=Math.sqrt(Math.pow(ball1.radius,2)+massExchange);
+	        }else{
+	          ball2.radius=0;
+	          ball1.radius=Math.sqrt(Math.pow(ball1.radius,2)+Math.pow(ball2.radius, 2));
+	        }
 
 	      }else{
+	        if(ball1.radius>4.001){
 	        ball2.radius=Math.sqrt(Math.pow(ball2.radius,2)+massExchange);
 	        ball1.radius=Math.sqrt(Math.pow(ball1.radius,2)-massExchange);
-
+	        }else{
+	          ball1.radius=0;
+	          ball2.radius=Math.sqrt(Math.pow(ball2.radius,2)+Math.pow(ball1.radius, 2));
+	        }
 	      }
 	    }
 	  },
@@ -370,6 +485,12 @@
 	    function Surrogate () { this.constructor = ChildClass; }
 	    Surrogate.prototype = BaseClass.prototype;
 	    ChildClass.prototype = new Surrogate();
+	  },
+
+	  magnitude: function(unit1, unit2){
+
+	    return Math.sqrt(Math.pow(unit1,2)+Math.pow(unit2,2));
+
 	  }
 
 
