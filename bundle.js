@@ -52,8 +52,6 @@
 	c.height = window.innerHeight*0.95;
 	var Game = __webpack_require__(1);
 
-
-
 	document.addEventListener("DOMContentLoaded", function(){
 
 	  var game = new Game(c,canvas);
@@ -84,7 +82,7 @@
 	  this.ctx = ctx;
 	  this.canvas = canvas;
 	  this.germs = [];
-	  this.makeGerms(200);
+	  this.makeGerms(150);
 	  this.player =  "";//this.makePlayer();
 	  this.start = true;
 	  this.over = false;
@@ -98,62 +96,60 @@
 	};
 
 	Game.prototype.handleKeyDown= function(e){
-
 	  var key = e.keyCode;
 
-
-
-	 if(key == 38 || key == 87){//up
+	 if(key === 38 || key === 87){//up
 	   if(this.player.vel.y>-2.5){
 	     this.player.vel.y-=0.3;
 	     this.handleEject(this);
 	   }
-	 }else if(key == 39 || key == 68){//right
+	 }else if(key === 39 || key === 68){//right
 	   if(this.player.vel.x<2.5){
 	     this.player.vel.x+=0.3;
 	      this.handleEject(this);
 	   }
-	 }else if(key == 40 || key == 83){//down
+	 }else if(key === 40 || key === 83){//down
 	   if(this.player.vel.y<2.5){
 	    this.player.vel.y+=0.3;
 	     this.handleEject(this);
 	   }
-	 }else if(key == 65 || key == 37){//left
+	 }else if(key === 65 || key === 37){//left
 	   if(this.player.vel.x>-2.5){
 	     this.player.vel.x-=0.3;
 	      this.handleEject(this);
 	   }
-	 }else if(key == 32 && this.over ){
+	 }else if(key === 32 && this.over ){
 	   this.germs = [];
 	   this.makeGerms(300);
 	   this.player =  this.makePlayer();
 	   this.over = false;
-	 }else if(key == 67){
+	 }else if(key === 67){
 	   this.debugger = !this.debugger;
-	 }else if(key == 32 && (this.over || this.start)){
+	 }else if(key === 32 && (this.over || this.start)){
 	   this.germs = [];
 	   this.makeGerms(300);
 	   this.player =  this.makePlayer();
 	   this.start = false;
 	 }
-
-
-
 	};
 
 
 	Game.prototype.handleEject = function(game){
 
-	  game.player.radius=Math.sqrt(Math.pow(game.player.radius,2)*0.95);
+	  game.player.radius=Math.sqrt(Math.pow(game.player.radius,2)*0.98);
 
-	   var vec = {x: -game.player.vel.x/(Util.magnitude(game.player.vel.x,game.player.vel.y)), y: -game.player.vel.y/(Util.magnitude(game.player.vel.x,game.player.vel.y)) }
-	   var pos = {x: (vec.x*game.player.radius*1.3)+ game.player.pos.x, y: (vec.y*game.player.radius*1.3)+ game.player.pos.y};
+	   var vec = {x: -game.player.vel.x/(Util.magnitude(game.player.vel.x,game.player.vel.y)),
+	     y: -game.player.vel.y/(Util.magnitude(game.player.vel.x,game.player.vel.y)) };
+
+	   var pos = {x: (vec.x*game.player.radius*1.3)+ game.player.pos.x,
+	     y: (vec.y*game.player.radius*1.3)+ game.player.pos.y};
 
 	   var vel = {x: -game.player.vel.x, y:-game.player.vel.y};
 	   var radius =  Math.sqrt(Math.pow(game.player.radius,2)*0.05);
 	   var density = 1;
 
-	   var newGerm = new Germ({id:game.germs.length+1, radius: radius, density: density, pos: pos, vel: vel, color:"#66cdaa"});
+	   var newGerm = new Germ({id:game.germs.length+1,
+	     radius: radius, density: density, pos: pos, vel: vel, color:"#66cdaa"});
 	   game.germs.push(newGerm);
 	},
 
@@ -177,6 +173,10 @@
 	Game.prototype.makeGerms = function(num){
 	  for(var i = 0; i<num;i++){
 	    var pos = {x:Math.random()*this.ctx.width, y:Math.random()*this.ctx.height};
+	    if(pos.x > this.ctx.width*0.4 && pos.x < this.ctx.width*0.6 && pos.y > this.ctx.height*0.4 && pos.y < this.ctx.height*0.6){
+	      i-=1;
+	      continue;
+	    }
 	    var vel = {x:(Math.random()-0.5)*1, y:(Math.random()-0.5)*1};
 	    var radius =  Math.random()*15;
 	    var density = 1;
@@ -184,7 +184,6 @@
 	    var newGerm = new Germ(options);
 	    this.germs.push(newGerm);
 	  }
-
 	};
 
 	Game.prototype.cursorPos = function(ctx){
@@ -259,10 +258,8 @@
 
 	Game.prototype.render = function(ctx){
 	  if(!this.start){
-
 	      this.player.render(ctx,this.germs);
 	  }
-
 
 	for(var i =0;i < this.germs.length; i++){
 	    this.germs[i].render(ctx,this.germs);
@@ -279,16 +276,19 @@
 
 	Game.prototype.draw = function(ctx){
 	  this.drawBackground(ctx);
+
+
+	  if(this.debugger){
+	  this.cursorPos(ctx);
+	  }
+
+	  this.germs.forEach(function(germ){germ.draw(ctx);});
 	  if(this.start){
 	    this.checkStart(ctx);
 	  }else{
 	    this.player.draw(ctx);
 	  }
 
-	  if(this.debugger){
-	  this.cursorPos(ctx);
-	  }
-	  this.germs.forEach(function(germ){germ.draw(ctx);});
 
 	  if(this.over){
 	    this.renderOver(ctx);
@@ -297,7 +297,7 @@
 
 
 	Game.prototype.drawBackground = function(ctx){
-	  base_image = new Image();
+	  var base_image = new Image();
 	  base_image.src = this.backgroundImage;
 	  ctx.drawImage(base_image, 0, 0, ctx.width, ctx.height);
 	};
@@ -322,16 +322,12 @@
 	var Ball = __webpack_require__(3);
 	var Util = __webpack_require__(4);
 
-
-
-
 	var Germ = function(options){
-
 	    Ball.call(this, options);
 	};
 
-
 	Util.inherits(Germ, Ball);
+
 	module.exports = Germ;
 
 
@@ -349,7 +345,6 @@
 	  this.radius = options.radius;
 	  this.color = options.color;
 	  this.mass = Math.PI*(options.radius*options.radius)*options.density;
-
 	};
 
 
@@ -357,8 +352,6 @@
 
 	  this.pos.x+=this.vel.x;
 	  this.pos.y+=this.vel.y;
-
-
 
 	  balls.forEach(function(ball){
 	    if(ball.id!==this.id){
@@ -369,16 +362,12 @@
 	};
 
 
-
-
 	Ball.prototype.draw = function(ctx){
 	  ctx.save();
 	  ctx.beginPath();
 	  ctx.fillStyle = this.color;
 	  ctx.arc(this.pos.x,this.pos.y,this.radius,0,2*Math.PI);
 	  ctx.fill();
-
-
 	  ctx.restore();
 	};
 
@@ -398,7 +387,6 @@
 	      obj.vel.y=0;
 	    }
 
-
 	    if((obj.pos.x +obj.radius)>ctx.width){
 	      obj.pos.x=ctx.width-obj.radius*1.001;
 	      obj.vel.x=-obj.vel.x*inelasticCoeff ;
@@ -414,7 +402,6 @@
 	    if((obj.pos.y -obj.radius)<0){
 	      obj.pos.y=0+obj.radius*1.001;
 	      obj.vel.y=-obj.vel.y*inelasticCoeff;
-
 	    }
 
 	  },
@@ -425,29 +412,6 @@
 
 
 	     if( check ){
-	      //  var diff = ball1.radius+ ball2.radius - objDistance;
-	      //  var mag = Math.sqrt(Math.pow(ball1.pos.x-ball2.pos.x,2) + Math.pow(ball1.pos.y-ball2.pos.y,2));
-	      //  var distance = {x: Math.abs(ball1.pos.x - ball2.pos.x)/(mag)*diff, y: Math.abs(ball1.pos.y-ball2.pos.y)/(mag)*diff};
-	       //
-	       //
-	      //  var distCoeff = 0.51;
-	       //
-	      //  if(ball1.pos.x > ball2.pos.x){
-	      //    ball1.pos.x+=distance.x*distCoeff;
-	      //    ball2.pos.x-=distance.x*distCoeff;
-	      //  }else{
-	      //    ball1.pos.x-=distance.x*distCoeff;
-	      //    ball2.pos.x+=distance.x*distCoeff;
-	      //  }
-	       //
-	      //  if(ball1.pos.y > ball2.pos.y){
-	      //    ball1.pos.y+=distance.y*distCoeff;
-	      //    ball2.pos.y-=distance.y*distCoeff;
-	      //   }else{
-	      //    ball1.pos.y-=distance.y*distCoeff;
-	      //    ball2.pos.y+=distance.y*distCoeff;
-	      //  }
-
 	       this.enforceCollison(ball1,ball2);
 	     }
 
@@ -488,11 +452,8 @@
 	  },
 
 	  magnitude: function(unit1, unit2){
-
 	    return Math.sqrt(Math.pow(unit1,2)+Math.pow(unit2,2));
-
 	  }
-
 
 	};
 
@@ -507,24 +468,10 @@
 	var Util = __webpack_require__(4);
 
 	var Player = function(options){
-
 	    Ball.call(this, options);
 	};
 
 	Util.inherits(Player, Ball);
-
-	// Player.prototype.render = function(ctx){
-	//
-	//   this.pos.x+=this.vel.x;
-	//   this.pos.y+=this.vel.y;
-	//   Util.checkBounds(this,ctx);
-	//
-	//
-	// };
-
-
-
-
 
 	module.exports = Player;
 
