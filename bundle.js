@@ -78,7 +78,7 @@
 
 
 	var Game = function(ctx,canvas){
-	  this.backgroundImage = "http://res.cloudinary.com/bravaudio/image/upload/v1463032054/Silver-Blur-Background_fk8fyd.jpg";
+	  this.backgroundImageUrl = "https://s3-us-west-1.amazonaws.com/germ/Silver-Blur-Background_fk8fyd.jpg";
 	  this.ctx = ctx;
 	  this.canvas = canvas;
 	  this.germs = [];
@@ -87,9 +87,10 @@
 	  this.start = true;
 	  this.over = false;
 	  this.debugger = false;
+
 	  this.canvas.addEventListener('mousemove',
 	  function(e){this.handleMouseMove(ctx,e);}.bind(this), false);
-
+	  this.createBackground();
 	  document.addEventListener('keydown',  function(e){this.handleKeyDown(e);}.bind(this), false);
 	//  this.canvas.addEventListener('keyup',this.handleKeyDown);
 
@@ -100,22 +101,22 @@
 
 	 if(key === 38 || key === 87){//up
 	   if(this.player.vel.y>-2.5){
-	     this.player.vel.y-=0.3;
+	     this.player.vel.y-=0.5;
 	     this.handleEject(this);
 	   }
 	 }else if(key === 39 || key === 68){//right
 	   if(this.player.vel.x<2.5){
-	     this.player.vel.x+=0.3;
+	     this.player.vel.x+=0.5;
 	      this.handleEject(this);
 	   }
 	 }else if(key === 40 || key === 83){//down
 	   if(this.player.vel.y<2.5){
-	    this.player.vel.y+=0.3;
+	    this.player.vel.y+=0.5;
 	     this.handleEject(this);
 	   }
 	 }else if(key === 65 || key === 37){//left
 	   if(this.player.vel.x>-2.5){
-	     this.player.vel.x-=0.3;
+	     this.player.vel.x-=0.5;
 	      this.handleEject(this);
 	   }
 	 }else if(key === 32 && this.over ){
@@ -136,7 +137,7 @@
 
 	Game.prototype.handleEject = function(game){
 
-	  game.player.radius=Math.sqrt(Math.pow(game.player.radius,2)*0.98);
+	  game.player.radius=Math.sqrt(Math.pow(game.player.radius,2)*0.99);
 
 	   var vec = {x: -game.player.vel.x/(Util.magnitude(game.player.vel.x,game.player.vel.y)),
 	     y: -game.player.vel.y/(Util.magnitude(game.player.vel.x,game.player.vel.y)) };
@@ -145,7 +146,7 @@
 	     y: (vec.y*game.player.radius*1.3)+ game.player.pos.y};
 
 	   var vel = {x: -game.player.vel.x, y:-game.player.vel.y};
-	   var radius =  Math.sqrt(Math.pow(game.player.radius,2)*0.05);
+	   var radius =  Math.sqrt(Math.pow(game.player.radius,2)*0.01);
 	   var density = 1;
 
 	   var newGerm = new Germ({id:game.germs.length+1,
@@ -297,9 +298,12 @@
 
 
 	Game.prototype.drawBackground = function(ctx){
-	  var base_image = new Image();
-	  base_image.src = this.backgroundImage;
-	  ctx.drawImage(base_image, 0, 0, ctx.width, ctx.height);
+	  ctx.drawImage(this.backgroundImage, 0, 0, ctx.width, ctx.height);
+	};
+
+	Game.prototype.createBackground = function(){
+	  this.backgroundImage = new Image();
+	  this.backgroundImage.src = this.backgroundImageUrl;
 	};
 
 
@@ -379,69 +383,65 @@
 /***/ function(module, exports) {
 
 	var Util = {
-	  checkBounds: function(obj,ctx){
+	  checkBounds: function(obj, ctx){
 
 	    var inelasticCoeff = 0.5;
 
-	    if(Math.abs(obj.vel.y)<0.1){
-	      obj.vel.y=0;
+	    if(Math.abs(obj.vel.y) < 0.1){
+	      obj.vel.y = 0;
 	    }
 
-	    if((obj.pos.x +obj.radius)>ctx.width){
-	      obj.pos.x=ctx.width-obj.radius*1.001;
-	      obj.vel.x=-obj.vel.x*inelasticCoeff ;
+	    if((obj.pos.x + obj.radius) > ctx.width){
+	      obj.pos.x = ctx.width - obj.radius*1.001;
+	      obj.vel.x =- obj.vel.x * inelasticCoeff ;
 	    }
-	    if((obj.pos.x -obj.radius)<0) {
-	      obj.pos.x=0+obj.radius*1.001;
-	      obj.vel.x=-obj.vel.x*inelasticCoeff;
+	    if((obj.pos.x - obj.radius) < 0) {
+	      obj.pos.x = 0 + obj.radius * 1.001;
+	      obj.vel.x =- obj.vel.x * inelasticCoeff;
 	    }
-	    if((obj.pos.y +obj.radius)>ctx.height){
-	      obj.pos.y=ctx.height-obj.radius*1.001;
-	      obj.vel.y=-obj.vel.y*inelasticCoeff;
+	    if((obj.pos.y + obj.radius) > ctx.height){
+	      obj.pos.y = ctx.height - obj.radius*1.001;
+	      obj.vel.y =- obj.vel.y * inelasticCoeff;
 	    }
-	    if((obj.pos.y -obj.radius)<0){
-	      obj.pos.y=0+obj.radius*1.001;
-	      obj.vel.y=-obj.vel.y*inelasticCoeff;
+	    if((obj.pos.y - obj.radius) < 0){
+	      obj.pos.y = 0 + obj.radius * 1.001;
+	      obj.vel.y =- obj.vel.y * inelasticCoeff;
 	    }
-
 	  },
 
-	  checkCollison : function(ball1,ball2){
-	    var objDistance = Math.sqrt(Math.pow(ball1.pos.x-ball2.pos.x,2)+Math.pow(ball1.pos.y-ball2.pos.y,2));
-	    var check = objDistance  < ball1.radius+ ball2.radius;
-
+	  checkCollison : function(ball1, ball2){
+	    var objDistance = Math.sqrt(Math.pow(ball1.pos.x-ball2.pos.x,2) + Math.pow(ball1.pos.y-ball2.pos.y,2));
+	    var check = objDistance  < ball1.radius + ball2.radius;
 
 	     if( check ){
 	       this.enforceCollison(ball1,ball2);
 	     }
-
-
-
 	  },
 
-	  enforceCollison: function(ball1,ball2){
-
-
+	  enforceCollison: function(ball1, ball2){
 	    var massExchange = 16;
-	    if(ball1.radius >0 && ball2.radius > 0){
-	      if(ball1.radius > ball2.radius){
-	        if(ball2.radius>4.001){
-	        ball2.radius=Math.sqrt(Math.pow(ball2.radius,2)-massExchange);
-	        ball1.radius=Math.sqrt(Math.pow(ball1.radius,2)+massExchange);
-	        }else{
-	          ball2.radius=0;
-	          ball1.radius=Math.sqrt(Math.pow(ball1.radius,2)+Math.pow(ball2.radius, 2));
-	        }
 
-	      }else{
-	        if(ball1.radius>4.001){
-	        ball2.radius=Math.sqrt(Math.pow(ball2.radius,2)+massExchange);
-	        ball1.radius=Math.sqrt(Math.pow(ball1.radius,2)-massExchange);
+	    if(ball1.radius > 0 && ball2.radius > 0){
+	      if(ball1.radius > ball2.radius){
+	        if(ball2.radius > 4.001){
+	          massExchange = (ball2.radius/4)*16;//dynamic scaling mass exchange
+	        ball2.radius = Math.sqrt(Math.pow(ball2.radius,2) - massExchange);
+	        ball1.radius = Math.sqrt(Math.pow(ball1.radius,2) + massExchange);
 	        }else{
-	          ball1.radius=0;
-	          ball2.radius=Math.sqrt(Math.pow(ball2.radius,2)+Math.pow(ball1.radius, 2));
+	          ball2.radius = 0;
+	          ball1.radius = Math.sqrt(Math.pow(ball1.radius,2) + Math.pow(ball2.radius, 2));
+	        }
+	      }else{
+	        if(ball1.radius > 4.001){
+	            massExchange = (ball1.radius/4)*16;//dynamic scaling mass exchange
+	          ball2.radius = Math.sqrt(Math.pow(ball2.radius,2) + massExchange);
+	          ball1.radius = Math.sqrt(Math.pow(ball1.radius,2) - massExchange);
+	        }else{
+	          ball1.radius = 0;
+	          ball2.radius = Math.sqrt(Math.pow(ball2.radius,2) + Math.pow(ball1.radius, 2));
 	        }
 	      }
+
 	    }
 	  },
 
