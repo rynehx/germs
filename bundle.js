@@ -158,7 +158,7 @@
 	   var density = 1;
 
 	   var newGerm = new Germ({id:game.germs.length+1,
-	     radius: radius, density: density, pos: pos, vel: vel, color:"#66cdaa"});
+	     radius: radius, density: density, pos: pos, vel: vel, color:"#469eb4"});  //"#66cdaa"
 	   game.germs.push(newGerm);
 	},
 
@@ -208,7 +208,12 @@
 	  if(this.player.radius <= 1 ){
 	    this.over = "lost";
 	  }
-	  if(this.germs.length===0){
+
+	  var eliminated = this.germs.every(function(el){
+	    return el.color !== "#66cdaa";
+	  });
+
+	  if(eliminated){
 	    this.over = "won";
 	  }
 	};
@@ -241,6 +246,7 @@
 	  ctx.fillText("3. avoid bigger germs", ctx.width*0.02, ctx.height*0.1 + instructionFont*3);
 	  ctx.fillText("4. moving ejects your own mass!", ctx.width*0.02, ctx.height*0.1 + instructionFont*4);
 	  ctx.fillText("5. press 'r' to restart", ctx.width*0.02, ctx.height*0.1 + instructionFont*5);
+	  ctx.fillText("6. to win absorb all GREEN germs", ctx.width*0.02, ctx.height*0.1 + instructionFont*6);
 	  ctx.restore();
 
 	};
@@ -262,10 +268,11 @@
 	    ctx.fillText("press space to play again",ctx.width/2 - (ctx.width/1000*200) ,ctx.height/2 );
 
 	  }else if (this.over === "won"){
+	    var overFont = (ctx.width+ctx.height)/1800*40;
 	    ctx.fillStyle="#FFFFFF";
-	    ctx.font = "30px Arial";
-	    ctx.fillText("You Won!",ctx.width/2-30,ctx.height/2-10);
-	    ctx.fillText("press space to play again",ctx.width/2-150,ctx.height/2-30);
+	    ctx.font = overFont+ "px Arial";
+	    ctx.fillText("  You Won! ", ctx.width/2 - (ctx.width/1000*120) ,ctx.height/2 - overFont*1.4);
+	    ctx.fillText("press space to play again",ctx.width/2 - (ctx.width/1000*200) ,ctx.height/2 );
 	  }
 	  ctx.restore();
 	};
