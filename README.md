@@ -39,4 +39,4 @@ The game is won when all the green germs are absorbed. Each time the player move
 The screen shot below shows a scenario where the player almost won.
 
 ![almost_won]
-[almost_won]: http://rynehx.github.io/germs/
+[almost_won]: https://s3-us-west-1.amazonaws.com/germ/germs+-+almost+won.png
