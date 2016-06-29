@@ -25,6 +25,7 @@ The main feature of the game is absorbing other germs. Each time two germs come 
 The code below handles the mass balance in the game logic.
 
 `ball1.radius = Math.sqrt(Math.pow(ball1.radius,2) + massExchange);`
+
 `ball2.radius = Math.sqrt(Math.pow(ball2.radius,2) - massExchange);`
 
 Because the both areas are circles, `π` is not needed in the equation.
