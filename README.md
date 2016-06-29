@@ -7,6 +7,7 @@
 
 Germs is a 2D interactive game coded in javascript. The purpose of the game is too absorb smaller particles by coming in contact and avoid being absorbed by larger particles. The game ends either when the player has absorbed all other entities on the screen or the player is absorbed. Each time the  player increases his/her movement speed, particles are ejected, thus making the player germ smaller.
 
+![show]
 [show]: https://s3-us-west-1.amazonaws.com/germ/germs+-+show.png
 
 ##Controls
@@ -23,15 +24,18 @@ The main feature of the game is absorbing other germs. Each time two germs come 
 
 The code below handles the mass balance in the game logic.
 
-`ball2.radius = Math.sqrt(Math.pow(ball2.radius,2) - massExchange);
-ball1.radius = Math.sqrt(Math.pow(ball1.radius,2) + massExchange);`
+`ball1.radius = Math.sqrt(Math.pow(ball1.radius,2) + massExchange);`
+`ball2.radius = Math.sqrt(Math.pow(ball2.radius,2) - massExchange);`
 
+Because the both areas are circles, `π` is not needed in the equation.
 
+The germ objects store only the radius. Each time collision occurs, the above equations transfers both to areas and add/subtract the mass exchange quantity from the two areas. The germs are updated with an radius calculated from the resulting area.
 
+##Win
 
-[start]: http://rynehx.github.io/germs/
+The game is won when all the green germs are absorbed. Each time the player moves, part of the player is ejected. This makes it dangerous to do a lot of maneuvering, as losing size makes other bigger germs threats. The eject particles are blue which do not count toward the green germ count but can be absorbed by other green germs and even absorb the player! The goal is to absorb all the green germs and not be absorb!
 
-[middle]: http://rynehx.github.io/germs/
+The screen shot below shows a scenario where the player almost won.
 
-
+![almost_won]
 [almost_won]: http://rynehx.github.io/germs/
